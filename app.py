@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+
 # coding=utf-8
 import sys
 import os
@@ -20,8 +21,8 @@ from gevent.pywsgi import WSGIServer
 app = Flask(__name__)
 
 # Model saved with Keras model.save()
-MODEL_PATH = 'models/model_resnet.h5'
-print(" MODEL_PATH :",MODEL_PATH)
+MODEL_PATH = "models/model_resnet.h5"
+print(" MODEL_PATH :", MODEL_PATH)
 
 
 def model_predict(img_path, model):
@@ -34,28 +35,27 @@ def model_predict(img_path, model):
 
     # Be careful how your trained model deals with the input
     # otherwise, it won't make correct prediction!
-    x = preprocess_input(x, mode='caffe')
+    x = preprocess_input(x, mode="caffe")
 
     preds = model.predict(x)
     return preds
 
 
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def index():
     # Main page
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/predict', methods=['GET', 'POST'])
+@app.route("/predict", methods=["GET", "POST"])
 def upload():
-    if request.method == 'POST':
+    if request.method == "POST":
         # Get the file from post request
-        f = request.files['file']
+        f = request.files["file"]
 
         # Save the file to ./uploads
         basepath = os.path.dirname(__file__)
-        file_path = os.path.join(
-            basepath, 'uploads', secure_filename(f.filename))
+        file_path = os.path.join(basepath, "uploads", secure_filename(f.filename))
         f.save(file_path)
 
         # Load your trained model
@@ -65,21 +65,21 @@ def upload():
 
         # Make prediction
         preds = model_predict(file_path, model)
-        print('*** preds ***')
+        print("*** preds ***")
 
         # Process your result for human
         # pred_class = preds.argmax(axis=-1)            # Simple argmax
-        pred_class = decode_predictions(preds, top=1)   # ImageNet Decode
-        print('*** pred class ***')
-        result = str(pred_class[0][0][1])               # Convert to string
-        print('*** result ***')
+        pred_class = decode_predictions(preds, top=1)  # ImageNet Decode
+        print("*** pred class ***")
+        result = str(pred_class[0][0][1])  # Convert to string
+        print("*** result ***")
         return result
-    elif request.method == 'GET':
-        return render_template('index.html')
+    elif request.method == "GET":
+        return render_template("index.html")
     return None
 
 
-if __name__ == '__main__':
-    print('*** App Started ***')
-    app.run(debug=True)
-
+if __name__ == "__main__":
+    print("*** App Started ***")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
